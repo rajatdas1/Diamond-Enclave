@@ -189,6 +189,14 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 }
 </style>
 
+
+<style id="payment-status-public">
+.metric.payment-paid{background:#e8f5ee !important;border-color:#c5e5d6 !important}
+.metric.payment-paid b{color:#176b50 !important}
+.payment-paid-status{display:block;margin-top:4px;color:#176b50;font-size:9px;font-weight:900;line-height:1.25}
+.payment-txn{display:block;font-weight:700;font-size:8px;margin-top:1px;letter-spacing:.01em}
+</style>
+
 </head>
 <body>
 <header class="hero">
@@ -541,4 +549,38 @@ renderResidents("");
 
 
 
+<script id="payment-status-public-script">
+(function(){
+  var paymentStatus = {"D-1A": {"maintenance": "•••• 1058"}, "A-4A": {"maintenance": "•••• 2235"}, "C-5C": {"maintenance": "•••• 3083", "sinking": "•••• 6920"}, "A-5E": {"maintenance": "•••• 8201"}, "D-GB": {"maintenance": "•••• 5854", "sinking": "•••• 8732"}};
+  function esc(s){
+    return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+  }
+  function applyPaymentStatus(){
+    var cards=document.querySelectorAll('#results .resident');
+    for(var i=0;i<cards.length;i++){
+      var card=cards[i];
+      var flatEl=card.querySelector('.flat');
+      if(!flatEl) continue;
+      var flat=flatEl.textContent.trim();
+      var p=paymentStatus[flat];
+      if(!p) continue;
+      var metrics=card.querySelectorAll('.breakdown .metric');
+      if(metrics.length<4) continue;
+      if(p.maintenance && !metrics[1].querySelector('.payment-paid-status')){
+        metrics[1].classList.add('payment-paid');
+        metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.maintenance)+'</span></span>');
+      }
+      if(p.sinking && !metrics[2].querySelector('.payment-paid-status')){
+        metrics[2].classList.add('payment-paid');
+        metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.sinking)+'</span></span>');
+      }
+    }
+  }
+  var results=document.getElementById('results');
+  if(results){
+    new MutationObserver(function(){applyPaymentStatus();}).observe(results,{childList:true,subtree:true});
+    applyPaymentStatus();
+  } else { document.addEventListener('DOMContentLoaded',applyPaymentStatus); }
+})();
+</script>
 </body></html>
