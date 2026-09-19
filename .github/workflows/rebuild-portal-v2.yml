@@ -1,0 +1,76 @@
+name: Rebuild Diamond Enclave portal v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-portal-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build clean portal
+        shell: bash
+        run: |
+          cat > /tmp/template.html <<'HTML'
+          <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111"><title>Diamond Enclave — Maintenance & Sinking Fund</title><style>
+          :root{--ink:#151515;--muted:#707070;--paper:#f7f5f1;--card:#fff;--line:#e7e2d9;--gold:#79591f;--green:#176b50}*{box-sizing:border-box}html,body{margin:0;width:100%;overflow-x:hidden}body{background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}.container{width:min(1120px,calc(100% - 16px));margin:auto}.top{background:#111;color:#fff;font-size:10px;padding:8px 0}.hero{text-align:center;background:linear-gradient(#fff,#faf8f3);padding:22px 0 18px;border-bottom:1px solid var(--line)}.assoc{font-size:11px;font-weight:900}.hero h1{font:500 clamp(28px,5vw,44px)/1.05 Georgia,serif;margin:9px 0}.hero p{margin:0 auto;color:var(--muted);font-size:13px;max-width:680px}.pills{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:12px}.pill{background:#fff;border:1px solid #ddd5c5;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:800}.payments{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}.card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 7px 22px rgba(0,0,0,.06)}.pay{padding:17px}.kicker{font-size:9px;color:var(--gold);font-weight:900;text-transform:uppercase;letter-spacing:.12em}.pay h2{font-size:18px;margin:4px 0 14px}.upi{display:block;text-align:center;text-decoration:none;background:#111;color:#fff;border-radius:11px;padding:13px;font-weight:800;font-size:12px}.note{margin-top:10px;padding:10px;border-radius:10px;background:#f7f1df;font-size:10px;color:#5f5b52}.account{border:1px solid var(--line);border-radius:12px;padding:3px 11px}.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);align-items:center}.row:last-child{border:0}.row span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.row strong{font-size:12px;overflow-wrap:anywhere}.copy{border:1px solid var(--line);background:#faf9f6;border-radius:7px;padding:5px 8px;font-size:10px}.searchbox{background:rgba(247,245,241,.96);padding:7px 0 12px}.search,.filters select{width:100%;min-height:50px;border:1px solid #d8d2c8;border-radius:14px;background:#fff;padding:12px;font-size:16px}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.helper{display:flex;justify-content:space-between;margin:7px 2px;color:var(--muted);font-size:10px}.clear{border:0;background:none;color:var(--gold);font-weight:900}.results{display:grid;gap:10px;padding-bottom:30px}.resident{padding:14px}.topline{display:flex;justify-content:space-between;gap:10px}.flat{font-size:21px;font-weight:900}.name{font-size:12px;color:var(--muted)}.total{text-align:right}.total small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.total strong{font-size:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.metric{padding:10px 7px;border-right:1px solid var(--line);min-width:0}.metric:last-child{border:0}.metric span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.metric b{display:block;font-size:12px;margin-top:3px;overflow-wrap:anywhere}.highlight{background:#fbf8ef}.highlight b{color:var(--gold)}.paid{background:#e8f5ee!important;border-color:#b8dfcb!important}.paid span,.paid b{color:var(--green)!important}.badge{display:inline-block;background:#1f8a4c;color:#fff;border-radius:999px;padding:2px 5px;font-size:7px;margin-left:3px}.ref{display:block;color:var(--green);font-size:8px;margin-top:3px;overflow-wrap:anywhere}.details{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.tag{border:1px solid var(--line);background:#faf9f6;padding:5px 7px;border-radius:8px;font-size:9px;color:#555}.payment-date{background:#e8f5ee;border-color:#b8dfcb;color:var(--green)}.empty{padding:28px;text-align:center;color:var(--muted)}footer{color:var(--muted);font-size:10px;padding-bottom:30px}@media(max-width:700px){.payments{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.metric:nth-child(3),.metric:nth-child(4){border-top:1px solid var(--line)}}
+          </style></head><body><div class="top"><div class="container">DIAMOND ENCLAVE · MAINTENANCE PORTAL</div></div><header class="hero"><div class="container"><div class="assoc">DIAMOND ENCLAVE FLAT OWNER'S ASSOCIATION</div><h1>Maintenance & Sinking Fund</h1><p>Search by flat number or owner name, or use the lists below. Maintenance and Sinking Fund payment status is shown independently.</p><div class="pills"><span class="pill">Maintenance ₹1.50 / sq ft</span><span class="pill">Sinking Fund ₹5 / sq ft</span></div></div></header><main class="container"><section class="payments"><div class="card pay"><div class="kicker">UPI payment</div><h2>Pay using UPI</h2><a class="upi" href="upi://pay?pa=037136061220006@AXISBANK&pn=DIAMOND%20ENCLAVE%20FLAT%20OWNER%27S%20ASSOCIATION&cu=INR">Open UPI payment app</a><div class="note">On iPhone, tap the button and select your preferred UPI app.</div></div><div class="card pay"><div class="kicker">Net banking</div><h2>Beneficiary details</h2><div class="account"><div class="row"><div><span>Account Name</span><strong>DIAMOND ENCLAVE FLAT OWNER'S ASSOCIATION</strong></div><button class="copy" onclick="copyText('DIAMOND ENCLAVE FLAT OWNER\\'S ASSOCIATION')">Copy</button></div><div class="row"><div><span>Account Number</span><strong>926020035244238</strong></div><button class="copy" onclick="copyText('926020035244238')">Copy</button></div><div class="row"><div><span>IFSC</span><strong>UTIB0006122</strong></div><button class="copy" onclick="copyText('UTIB0006122')">Copy</button></div><div class="row"><div><span>MICR</span><strong>700211221</strong></div><button class="copy" onclick="copyText('700211221')">Copy</button></div></div></div></section><section><div class="searchbox"><input id="search" class="search" type="search" autocomplete="off" placeholder="Search by flat number or owner name — e.g. A-1A or Tapan Kumar Das"><div class="filters"><select id="flat"><option value="">All Flat Numbers</option></select><select id="name"><option value="">All Owner Names</option></select></div><div class="helper"><span id="count"></span><button class="clear" onclick="clearFilters()">Clear search</button></div></div><div id="results" class="results"></div></section><footer>Transaction references are masked on this public page.</footer></main><script>
+          const residents=__DATA__;
+          const search=document.getElementById('search'),flat=document.getElementById('flat'),name=document.getElementById('name'),results=document.getElementById('results'),count=document.getElementById('count');
+          const norm=v=>String(v??'').normalize('NFKC').replace(/\u00a0/g,' ').trim().toLowerCase();
+          const qnorm=v=>norm(v).replace(/[^a-z0-9]+/g,'');
+          const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+          const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+          const mask=x=>{if(!x||x==='Not yet verified')return '';const a=String(x).replace(/[^a-z0-9]/gi,'');return '•••• '+a.slice(-4)};
+          function metric(label,expected,paid,txn){if(paid!==null&&paid!==undefined){return '<div class="metric paid"><span>'+label+'</span><b>'+money(paid)+' <em class="badge">PAID</em></b><span class="ref">'+(txn&&txn!=='Not yet verified'?'Txn: '+esc(mask(txn)):'Ref not yet verified')+'</span></div>'}return '<div class="metric"><span>'+label+'</span><b>'+money(expected)+'</b></div>'}
+          function render(){const q=qnorm(search.value),f=norm(flat.value),n=norm(name.value),m=residents.filter(r=>(!f||norm(r.flat)===f)&&(!n||norm(r.name)===n)&&(!q||qnorm(r.flat).includes(q)||qnorm(r.name).includes(q)));count.textContent=(q||f||n)?m.length+' match'+(m.length===1?'':'es'):residents.length+' flats';if(!m.length){results.innerHTML='<div class="card empty"><strong>No matching resident found.</strong><div>Try another flat number or owner name.</div></div>';return}results.innerHTML=m.map(r=>'<article class="card resident"><div class="topline"><div><div class="flat">'+esc(r.flat)+'</div><div class="name">'+esc(r.name)+'</div></div><div class="total"><small>Total payable now</small><strong>'+money(r.payableNow)+'</strong></div></div><div class="grid"><div class="metric"><span>Area</span><b>'+Number(r.area).toLocaleString('en-IN')+' sq ft</b></div>'+metric('Monthly maintenance',r.monthly,r.maintenancePaid,r.maintenanceTxn)+metric('One-time sinking fund',r.sinking,r.sinkingPaid,r.sinkingTxn)+'<div class="metric highlight"><span>Monthly + sinking</span><b>'+money(r.payableNow)+'</b></div></div><div class="details"><span class="tag">Base maintenance: '+money(r.maintenance)+'</span><span class="tag">Cars: '+r.cars+' · ₹'+Number(r.carCharge).toLocaleString('en-IN')+'</span><span class="tag">Bikes: '+r.bikes+' · Payable: '+r.payableBikes+' · ₹'+Number(r.bikeCharge).toLocaleString('en-IN')+'</span>'+(r.paymentDate?'<span class="tag payment-date">Payment recorded: '+esc(r.paymentDate)+'</span>':'')+'</div></article>').join('')}
+          function populate(){const fs=[...new Set(residents.map(r=>r.flat))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})),ns=[...new Set(residents.map(r=>r.name))].sort((a,b)=>a.localeCompare(b));flat.innerHTML='<option value="">All Flat Numbers</option>'+fs.map(v=>'<option>'+esc(v)+'</option>').join('');name.innerHTML='<option value="">All Owner Names</option>'+ns.map(v=>'<option>'+esc(v)+'</option>').join('')}
+          function clearFilters(){search.value='';flat.value='';name.value='';render()}
+          function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t)}
+          search.addEventListener('input',render);search.addEventListener('change',render);flat.addEventListener('change',render);name.addEventListener('change',render);populate();render();
+          </script></body></html>
+          HTML
+
+          python3 <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          source=subprocess.check_output(['git','show','9f812af:index.html'],text=True)
+          m=re.search(r'(?:var|const)\s+residents\s*=\s*(\[.*?\])\s*;',source,re.S)
+          if not m: raise SystemExit('Resident data not found')
+          residents=json.loads(m.group(1))
+          payments={
+          'C-6D':(2000,'110709247788',None,None,'18-Sep-2026'),'A-2D':(2602,'6261 8603 5998',8340,'Not yet verified','18-Sep-2026'),'A-2A':(2121,'129833150566',6735,'129833407569','18-Sep-2026'),'B-6E':(None,None,6225,'T2609182029138022951553','18-Sep-2026'),'A-3E':(2532,'T2609182027092580351568',8105,'T2609182028355328780337','18-Sep-2026'),'D-1A':(985,'110709831058',None,None,'18-Sep-2026'),'A-4A':(2125,'626120812235',6750,'626120812235','18-Sep-2026'),'B-3A':(2361,'Not yet verified',7535,'Not yet verified','18-Sep-2026'),'B-4G':(2002,'0P6ZYN1M3861',None,None,'18-Sep-2026'),'C-5C':(2151,'626165123083',6835,'662741576920','18-Sep-2026'),'A-5E':(2485,'T2609182201201309668201',None,None,'18-Sep-2026'),'D-GB':(885,'T2609182203377459655854',2950,'T2609182209220365678732','18-Sep-2026'),'B-5A':(2261,'6143 6298 3678',None,None,'19-Sep-2026'),'B-5D':(2155,'315022614546, 626259588871',None,None,'19-Sep-2026'),'B-5C':(1705,'T2609190925318458991526',5350,'T2609190925318458991526','19-Sep-2026'),'B-5E':(2087,'315025708656, 315025826475',None,None,'19-Sep-2026'),'B-2C':(6564,'626210381247, 626213054917',5135,'626210381247','19-Sep-2026'),'B-5G':(1953,'Not yet verified',None,None,'19-Sep-2026'),'C-3C':(2151,'216036040505',None,None,'19-Sep-2026'),'B-3G':(2020,'626290399699',6400,'T2609191146525855195380','19-Sep-2026'),'D-3CD':(2225,'662808285947',7415,'315033','19-Sep-2026'),'D-5D':(1124,'3150334',3745,'3150556','19-Sep-2026'),'B-6G':(1990,'626240488499',6300,'626240488499','19-Sep-2026'),'C-5B':(1722,'Not yet verified',5740,'Not yet verified','19-Sep-2026'),'B-1C':(1708,'6262 0667 4746',None,None,'19-Sep-2026'),'B-6A':(None,None,7775,'129879860527','19-Sep-2026'),'B-6D':(2055,'Not yet verified',6850,'Not yet verified','19-Sep-2026')}
+          assert len(payments)==27 and len(set(payments))==27
+          flats={r['flat'] for r in residents}; unknown=sorted(set(payments)-flats)
+          assert not unknown, 'Unknown payment flats: '+str(unknown)
+          for r in residents:
+              r.pop('maintenancePaid',None);r.pop('maintenanceTxn',None);r.pop('sinkingPaid',None);r.pop('sinkingTxn',None);r.pop('paymentDate',None)
+              p=payments.get(r['flat'])
+              if p:r['maintenancePaid'],r['maintenanceTxn'],r['sinkingPaid'],r['sinkingTxn'],r['paymentDate']=p
+          page=Path('/tmp/template.html').read_text().replace('__DATA__',json.dumps(residents,ensure_ascii=False,separators=(',',':')))
+          Path('index.html').write_text(page,encoding='utf-8')
+          print('Built',len(residents),'residents and',len(payments),'payment entries')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,json
+          h=Path('index.html').read_text()
+          m=re.search(r'const residents=(\[.*?\]);',h,re.S); assert m
+          assert len(json.loads(m.group(1)))==111
+          assert 'MutationObserver' not in h and 'PLACEHOLDER_DATA' not in h
+          print('Validation passed')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || (git commit -m "Rebuild portal with validated payment register" && git push)
