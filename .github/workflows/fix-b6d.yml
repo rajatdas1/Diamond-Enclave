@@ -1,0 +1,60 @@
+name: Fix B-6D maintenance payment
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-b6d.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct B-6D payment
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '"flat":"B-6D","name":"'  # anchor for the resident object
+          start = s.find(old)
+          if start < 0:
+              raise SystemExit('B-6D record not found')
+          end = s.find('}', start)
+          if end < 0:
+              raise SystemExit('B-6D record end not found')
+          block = s[start:end]
+          block2 = re.sub(r'"maintenancePaid":\s*2055', '"maintenancePaid":2155', block)
+          if block2 == block:
+              raise SystemExit('B-6D maintenancePaid=2055 not found')
+          s = s[:start] + block2 + s[end:]
+          p.write_text(s, encoding='utf-8')
+          print('B-6D maintenancePaid corrected to 2155')
+      - name: Validate
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          s = Path('index.html').read_text(encoding='utf-8')
+          start = s.find('"flat":"B-6D"')
+          end = s.find('}', start)
+          block = s[start:end]
+          assert '"maintenancePaid":2155' in block
+          assert '"maintenancePaid":2055' not in block
+          assert 'logo.svg' in s
+          assert 'qr.svg' in s
+          assert 'id="flat"' not in s and 'id="name"' not in s
+          print('Validation passed: B-6D=₹2,155; logo, QR and search-only UI preserved')
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Correct B-6D maintenance payment to 2155"
+          git push
