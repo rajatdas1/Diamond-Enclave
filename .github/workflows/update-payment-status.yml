@@ -26,14 +26,21 @@ jobs:
           path = Path('index.html')
           html = path.read_text(encoding='utf-8')
 
-          # Only verified transaction references are treated as PAID.
-          # Full references are deliberately not published; only the final four digits are shown.
+          # Payment amount present in the register = paid. Full transaction/reference
+          # numbers are never published; verified references are masked to their final four digits.
           payments = {
-            'D-1A': {'maintenance': '•••• 1058'},
-            'A-4A': {'maintenance': '•••• 2235'},
-            'C-5C': {'maintenance': '•••• 3083', 'sinking': '•••• 6920'},
-            'A-5E': {'maintenance': '•••• 8201'},
-            'D-GB': {'maintenance': '•••• 5854', 'sinking': '•••• 8732'},
+            'C-6D': {'maintenance': 'PAID · Ref not yet verified'},
+            'A-2D': {'maintenance': 'PAID · Ref not yet verified', 'sinking': 'PAID · Ref not yet verified'},
+            'A-2A': {'maintenance': 'PAID · Ref not yet verified', 'sinking': 'PAID · Ref not yet verified'},
+            'B-6E': {'sinking': 'PAID · Ref not yet verified'},
+            'A-3E': {'sinking': 'PAID · Ref not yet verified'},
+            'D-1A': {'maintenance': 'Txn •••• 1058'},
+            'A-4A': {'maintenance': 'Txn •••• 2235', 'sinking': 'PAID · Ref not yet verified'},
+            'B-3A': {'maintenance': 'PAID · Ref not yet verified'},
+            'C-5C': {'maintenance': 'Txn •••• 3083', 'sinking': 'Txn •••• 6920'},
+            'B-2A': {'maintenance': 'PAID · Ref not yet verified'},
+            'A-5E': {'maintenance': 'Txn •••• 8201'},
+            'D-GB': {'maintenance': 'Txn •••• 5854', 'sinking': 'Txn •••• 8732'},
           }
 
           style = '''
@@ -64,11 +71,11 @@ jobs:
                 if(metrics.length<4) continue;
                 if(p.maintenance && !metrics[1].querySelector('.payment-paid-status')){
                   metrics[1].classList.add('payment-paid');
-                  metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.maintenance)+'</span></span>');
+                  metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.maintenance)+'</span></span>');
                 }
                 if(p.sinking && !metrics[2].querySelector('.payment-paid-status')){
                   metrics[2].classList.add('payment-paid');
-                  metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.sinking)+'</span></span>');
+                  metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.sinking)+'</span></span>');
                 }
               }
             }
@@ -96,6 +103,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Show verified payment status on portal"
+            git commit -m "Show paid status on maintenance portal"
             git push
           fi
