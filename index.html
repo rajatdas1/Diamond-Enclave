@@ -191,13 +191,7 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 
 
 
-<style id="payment-status-public">
-.metric.payment-paid{background:#e8f5ee !important;border-color:#c5e5d6 !important}
-.metric.payment-paid b{color:#176b50 !important}
-.payment-paid-status{display:block;margin-top:4px;color:#176b50;font-size:9px;font-weight:900;line-height:1.25}
-.payment-txn{display:block;font-weight:700;font-size:8px;margin-top:1px;letter-spacing:.01em}
-</style>
-
+<style id="payment-status-correction">.metric.payment-paid{background:#e8f5ee!important;border-color:#c5e5d6!important}.metric.payment-paid b{color:#176b50!important}.payment-paid-status{display:block;margin-top:4px;color:#176b50;font-size:9px;font-weight:900;line-height:1.25}.payment-txn{display:block;font-weight:700;font-size:8px;margin-top:1px;letter-spacing:.01em}</style>
 </head>
 <body>
 <header class="hero">
@@ -550,38 +544,5 @@ renderResidents("");
 
 
 
-<script id="payment-status-public-script">
-(function(){
-  var paymentStatus = {"C-6D": {"maintenance": "PAID · Ref not yet verified"}, "A-2D": {"maintenance": "PAID · Ref not yet verified", "sinking": "PAID · Ref not yet verified"}, "A-2A": {"maintenance": "PAID · Ref not yet verified", "sinking": "PAID · Ref not yet verified"}, "B-6E": {"sinking": "PAID · Ref not yet verified"}, "A-3E": {"sinking": "PAID · Ref not yet verified"}, "D-1A": {"maintenance": "Txn •••• 1058"}, "A-4A": {"maintenance": "Txn •••• 2235", "sinking": "PAID · Ref not yet verified"}, "B-3A": {"maintenance": "PAID · Ref not yet verified"}, "C-5C": {"maintenance": "Txn •••• 3083", "sinking": "Txn •••• 6920"}, "B-2A": {"maintenance": "PAID · Ref not yet verified"}, "A-5E": {"maintenance": "Txn •••• 8201"}, "D-GB": {"maintenance": "Txn •••• 5854", "sinking": "Txn •••• 8732"}};
-  function esc(s){
-    return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
-  }
-  function applyPaymentStatus(){
-    var cards=document.querySelectorAll('#results .resident');
-    for(var i=0;i<cards.length;i++){
-      var card=cards[i];
-      var flatEl=card.querySelector('.flat');
-      if(!flatEl) continue;
-      var flat=flatEl.textContent.trim();
-      var p=paymentStatus[flat];
-      if(!p) continue;
-      var metrics=card.querySelectorAll('.breakdown .metric');
-      if(metrics.length<4) continue;
-      if(p.maintenance && !metrics[1].querySelector('.payment-paid-status')){
-        metrics[1].classList.add('payment-paid');
-        metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.maintenance)+'</span></span>');
-      }
-      if(p.sinking && !metrics[2].querySelector('.payment-paid-status')){
-        metrics[2].classList.add('payment-paid');
-        metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.sinking)+'</span></span>');
-      }
-    }
-  }
-  var results=document.getElementById('results');
-  if(results){
-    new MutationObserver(function(){applyPaymentStatus();}).observe(results,{childList:true,subtree:true});
-    applyPaymentStatus();
-  } else { document.addEventListener('DOMContentLoaded',applyPaymentStatus); }
-})();
-</script>
+<script id="payment-status-correction-script">(function(){var paymentStatus={"C-6D": {"maintenance": ["•••• 7788"]}, "A-2D": {"maintenance": ["•••• 5998"], "sinking": ["Ref pending verification"]}, "A-2A": {"maintenance": ["•••• 0566"], "sinking": ["•••• 7569"]}, "B-6E": {"sinking": ["•••• 1553"]}, "A-3E": {"maintenance": ["•••• 1568"], "sinking": ["•••• 0337"]}, "D-1A": {"maintenance": ["•••• 1058"]}, "A-4A": {"maintenance": ["•••• 2235"], "sinking": ["•••• 2235"]}, "B-3A": {"maintenance": ["Ref pending verification"]}, "B-4G": {"maintenance": ["•••• 3861"]}, "C-5C": {"maintenance": ["•••• 3083", "•••• 0505"], "sinking": ["•••• 6920"]}, "A-5E": {"maintenance": ["•••• 8201"]}, "D-GB": {"maintenance": ["•••• 5854"], "sinking": ["•••• 8732"]}, "B-5A": {"maintenance": ["•••• 3678"]}, "B-5D": {"maintenance": ["•••• 4546", "•••• 8871"]}, "B-5C": {"maintenance": ["•••• 1526"], "sinking": ["•••• 1526"]}, "B-5E": {"maintenance": ["•••• 8656", "•••• 6475"]}, "B-2C": {"maintenance": ["•••• 1247"], "sinking": ["•••• 1247"]}, "B-5G": {"maintenance": ["Ref pending verification"]}, "B-3G": {"maintenance": ["•••• 9699"]}};function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}function apply(){document.querySelectorAll('#results .resident').forEach(function(card){var f=card.querySelector('.flat');if(!f)return;var p=paymentStatus[f.textContent.trim()],m=card.querySelectorAll('.breakdown .metric');if(!p||m.length<4)return;function mark(i,refs){if(!refs||!refs.length)return;var x=m[i];x.classList.add('payment-paid');var old=x.querySelector('.payment-paid-status');if(old)old.remove();x.insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID'+refs.map(function(r){return '<span class="payment-txn">Txn: '+esc(r)+'</span>'}).join('')+'</span>')}mark(1,p.maintenance);mark(2,p.sinking)})}var r=document.getElementById('results');if(r){new MutationObserver(apply).observe(r,{childList:true,subtree:true});apply()}else document.addEventListener('DOMContentLoaded',apply)})();</script>
 </body></html>
