@@ -39,3 +39,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git diff --cached --quiet || (git commit -m "Restore UPI QR code in payment section" && git push)
+
+# Keep this workflow committed separately so GitHub Pages is refreshed with the latest portal content.
