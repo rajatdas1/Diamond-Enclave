@@ -14,37 +14,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply latest payment register mapping
+      - name: Apply complete payment register mapping
         run: |
           python3 <<'PY'
           from pathlib import Path
           import re, json
           p=Path('index.html')
           html=p.read_text(encoding='utf-8')
-          # Verified payment register mapping. Only the final 4 digits are published.
+
+          # Source: Diamond_Enclave_Payment_Details(2).xlsx / Payment Details.
+          # Column A = Flat, Column C = Maintenance Paid, Column E = Sinking Fund Paid.
+          # A non-empty paid amount means that specific payment type is PAID.
+          # Transaction/reference numbers are masked on the public site.
           payments={
-            'C-6D':{'maintenance':['•••• 7788']},
-            'A-2D':{'maintenance':['•••• 5998'],'sinking':['Ref pending verification']},
-            'A-2A':{'maintenance':['•••• 0566'],'sinking':['•••• 7569']},
-            'B-6E':{'sinking':['•••• 1553']},
-            'A-3E':{'maintenance':['•••• 1568'],'sinking':['•••• 0337']},
-            'D-1A':{'maintenance':['•••• 1058']},
-            'A-4A':{'maintenance':['•••• 2235'],'sinking':['•••• 2235']},
-            'B-3A':{'maintenance':['Ref pending verification']},
-            'B-4G':{'maintenance':['•••• 3861']},
-            'C-5C':{'maintenance':['•••• 3083','•••• 0505'],'sinking':['•••• 6920']},
-            'A-5E':{'maintenance':['•••• 8201']},
-            'D-GB':{'maintenance':['•••• 5854'],'sinking':['•••• 8732']},
-            'B-5A':{'maintenance':['•••• 3678']},
-            'B-5D':{'maintenance':['•••• 4546','•••• 8871']},
-            'B-5C':{'maintenance':['•••• 1526'],'sinking':['•••• 1526']},
-            'B-5E':{'maintenance':['•••• 8656','•••• 6475']},
-            'B-2C':{'maintenance':['•••• 1247'],'sinking':['•••• 1247']},
-            'B-5G':{'maintenance':['Ref pending verification']},
-            'B-3G':{'maintenance':['•••• 9699']}
+            'C-6D':{'maintenance':['Txn •••• 7788']},
+            'A-2D':{'maintenance':['Txn •••• 5998'],'sinking':['Paid · Ref not yet verified']},
+            'A-2A':{'maintenance':['Txn •••• 0566'],'sinking':['Txn •••• 7569']},
+            'B-6E':{'sinking':['Txn •••• 1553']},
+            'A-3E':{'maintenance':['Txn •••• 1568'],'sinking':['Txn •••• 0337']},
+            'D-1A':{'maintenance':['Txn •••• 1058']},
+            'A-4A':{'maintenance':['Txn •••• 2235'],'sinking':['Txn •••• 2235']},
+            'B-3A':{'maintenance':['Paid · Ref not yet verified']},
+            'B-4G':{'maintenance':['Txn •••• 3861']},
+            'C-5C':{'maintenance':['Txn •••• 3083','Txn •••• 0505'],'sinking':['Txn •••• 6920']},
+            'A-5E':{'maintenance':['Txn •••• 8201']},
+            'D-GB':{'maintenance':['Txn •••• 5854'],'sinking':['Txn •••• 8732']},
+            'B-5A':{'maintenance':['Txn •••• 3678']},
+            'B-5D':{'maintenance':['Txn •••• 4546','Txn •••• 8871']},
+            'B-5C':{'maintenance':['Txn •••• 1526'],'sinking':['Txn •••• 1526']},
+            'B-5E':{'maintenance':['Txn •••• 8656','Txn •••• 6475']},
+            'B-2C':{'maintenance':['Txn •••• 1247 · ₹400 due'],'sinking':['Txn •••• 1247']},
+            'B-5G':{'maintenance':['Paid · Ref not yet verified']},
+            'B-3G':{'maintenance':['Txn •••• 9699']}
           }
+
           style='''<style id="payment-status-correction">.metric.payment-paid{background:#e8f5ee!important;border-color:#c5e5d6!important}.metric.payment-paid b{color:#176b50!important}.payment-paid-status{display:block;margin-top:4px;color:#176b50;font-size:9px;font-weight:900;line-height:1.25}.payment-txn{display:block;font-weight:700;font-size:8px;margin-top:1px;letter-spacing:.01em}</style>'''
-          script='''<script id="payment-status-correction-script">(function(){var paymentStatus=__DATA__;function esc(s){return String(s).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]})}function apply(){document.querySelectorAll('#results .resident').forEach(function(card){var f=card.querySelector('.flat');if(!f)return;var p=paymentStatus[f.textContent.trim()],m=card.querySelectorAll('.breakdown .metric');if(!p||m.length<4)return;function mark(i,refs){if(!refs||!refs.length)return;var x=m[i];x.classList.add('payment-paid');var old=x.querySelector('.payment-paid-status');if(old)old.remove();x.insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID'+refs.map(function(r){return '<span class="payment-txn">Txn: '+esc(r)+'</span>'}).join('')+'</span>')}mark(1,p.maintenance);mark(2,p.sinking)})}var r=document.getElementById('results');if(r){new MutationObserver(apply).observe(r,{childList:true,subtree:true});apply()}else document.addEventListener('DOMContentLoaded',apply)})();</script>'''.replace('__DATA__',json.dumps(payments,ensure_ascii=False))
+          script='''<script id="payment-status-correction-script">(function(){var paymentStatus=__DATA__;function esc(s){return String(s).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]})}function apply(){document.querySelectorAll('#results .resident').forEach(function(card){var f=card.querySelector('.flat');if(!f)return;var p=paymentStatus[f.textContent.trim()],m=card.querySelectorAll('.breakdown .metric');if(!p||m.length<4)return;function mark(i,refs){if(!refs||!refs.length)return;var x=m[i];x.classList.add('payment-paid');var old=x.querySelector('.payment-paid-status');if(old)old.remove();x.insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID'+refs.map(function(r){return '<span class="payment-txn">'+esc(r)+'</span>'}).join('')+'</span>')}mark(1,p.maintenance);mark(2,p.sinking)})}var r=document.getElementById('results');if(r){new MutationObserver(apply).observe(r,{childList:true,subtree:true});apply()}else document.addEventListener('DOMContentLoaded',apply)})();</script>'''.replace('__DATA__',json.dumps(payments,ensure_ascii=False))
+
           html=re.sub(r'<style id="payment-status-public">.*?</style>\s*','',html,flags=re.S)
           html=re.sub(r'<script id="payment-status-public-script">.*?</script>\s*','',html,flags=re.S)
           html=re.sub(r'<style id="payment-status-correction">.*?</style>\s*','',html,flags=re.S)
@@ -52,10 +58,11 @@ jobs:
           html=html.replace('</head>',style+'\n</head>',1)
           html=html.replace('</body>',script+'\n</body>',1)
           p.write_text(html,encoding='utf-8')
+          print('Applied complete mapping for', len(payments), 'flat/payment records.')
           PY
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || (git commit -m "Correct maintenance and sinking payment status" && git push)
+          git diff --cached --quiet || (git commit -m "Apply all maintenance and sinking fund payments" && git push)
