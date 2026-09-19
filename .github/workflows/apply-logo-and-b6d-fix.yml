@@ -1,0 +1,54 @@
+name: Apply logo and B-6D payment fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-logo-and-b6d-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          if 'class="brand-logo"' not in s:
+              s = s.replace('.assoc{font-size:11px;font-weight:900}', '.brand-logo{display:block;width:min(180px,55vw);height:auto;margin:0 auto 10px}.assoc{font-size:11px;font-weight:900}')
+              s = s.replace('<div class="assoc">DIAMOND ENCLAVE FLAT OWNER\'S ASSOCIATION</div>', '<img class="brand-logo" src="logo.svg" alt="Diamond Enclave logo"><div class="assoc">DIAMOND ENCLAVE FLAT OWNER\'S ASSOCIATION</div>', 1)
+
+          old = '"flat":"B-6D","name":"AFJALUL MANNAN SUFI","area":1370,"maintenance":2055,"cars":1,"carCharge":100,"bikes":0,"payableBikes":0,"bikeCharge":0,"monthly":2155,"sinking":6850,"payableNow":9005,"maintenancePaid":2055,"maintenanceTxn":"Not yet verified"'
+          new = '"flat":"B-6D","name":"AFJALUL MANNAN SUFI","area":1370,"maintenance":2055,"cars":1,"carCharge":100,"bikes":0,"payableBikes":0,"bikeCharge":0,"monthly":2155,"sinking":6850,"payableNow":9005,"maintenancePaid":2155,"maintenanceTxn":"Not yet verified"'
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif '"flat":"B-6D"' not in s:
+              raise SystemExit('B-6D record not found')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'class="brand-logo"' in s
+          assert 'src="logo.svg"' in s
+          assert '"flat":"B-6D"' in s
+          assert '"maintenancePaid":2155' in s
+          assert '"maintenancePaid":2055,"maintenanceTxn":"Not yet verified"' not in s
+          assert 'select id="flat"' not in s and 'select id="name"' not in s
+          print('Validation passed')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || (git commit -m "Add logo and correct B-6D maintenance payment" && git push)
