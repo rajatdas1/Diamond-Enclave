@@ -1,0 +1,57 @@
+name: Apply Diamond Enclave UI update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-ui-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update page and QR
+        shell: bash
+        run: |
+          python -m pip install --quiet qrcode
+          python <<'PY'
+          from pathlib import Path
+          import qrcode, re
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r'<div class="filters">.*?</div>','',s,flags=re.S)
+          s=s.replace('Search by flat number or owner name, or use the lists below. Maintenance and Sinking Fund payment status is shown independently.','Search by flat number or owner name. Maintenance and Sinking Fund payment status is shown independently.')
+          s=re.sub(r'<div class="note">\s*</div>','<div class="qr-wrap"><img class="qr" src="assets/payment-qr.svg" alt="UPI QR code"><div class="qr-text"><h3>Scan the QR code to pay</h3><p>Use any UPI app to scan the QR code and complete the payment.</p></div></div>',s)
+          s=s.replace('On iPhone, tap the button and select your preferred UPI app.','')
+          s=s.replace('</style>','.qr-wrap{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center;margin-top:12px}.qr{width:160px;height:160px;border-radius:12px;border:6px solid #fff;box-shadow:0 5px 18px rgba(0,0,0,.12)}.qr-text h3{margin:0 0 6px;font-size:17px}.qr-text p{margin:0;color:var(--muted);font-size:12px}</style>',1)
+          s=s.replace('.search,.filters select{','.search{'); s=re.sub(r'\.filters\{[^}]*\}','',s)
+          start=s.find("const search=document.getElementById('search')"); end=s.find('populate();render();',start)
+          if start<0 or end<0: raise SystemExit('search JS block not found')
+          end+=len('populate();render();')
+          block='''const search=document.getElementById('search'),results=document.getElementById('results'),count=document.getElementById('count');\nconst norm=v=>String(v??'').normalize('NFKC').replace(/\\u00a0/g,' ').trim().toLowerCase();\nconst qnorm=v=>norm(v).replace(/[^a-z0-9]+/g,'');\nconst esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));\nconst money=n=>'₹'+Number(n||0).toLocaleString('en-IN');\nconst mask=x=>{if(!x||x==='Not yet verified')return '';const a=String(x).replace(/[^a-z0-9]/gi,'');return '•••• '+a.slice(-4)};\nfunction metric(label,expected,paid,txn){if(paid!==null&&paid!==undefined){return '<div class="metric paid"><span>'+label+'</span><b>'+money(paid)+' <em class="badge">PAID</em></b><span class="ref">'+(txn&&txn!=='Not yet verified'?'Txn: '+esc(mask(txn)):'Ref not yet verified')+'</span></div>'}return '<div class="metric"><span>'+label+'</span><b>'+money(expected)+'</b></div>'}\nfunction render(){const q=qnorm(search.value),m=residents.filter(r=>!q||qnorm(r.flat).includes(q)||qnorm(r.name).includes(q));count.textContent=(q?m.length+' match'+(m.length===1?'':'es'):residents.length+' flats');if(!m.length){results.innerHTML='<div class="card empty"><strong>No matching resident found.</strong><div>Try another flat number or owner name.</div></div>';return}results.innerHTML=m.map(r=>'<article class="card resident"><div class="topline"><div><div class="flat">'+esc(r.flat)+'</div><div class="name">'+esc(r.name)+'</div></div><div class="total"><small>Total payable now</small><strong>'+money(r.payableNow)+'</strong></div></div><div class="grid"><div class="metric"><span>Area</span><b>'+Number(r.area).toLocaleString('en-IN')+' sq ft</b></div>'+metric('Monthly maintenance',r.monthly,r.maintenancePaid,r.maintenanceTxn)+metric('One-time sinking fund',r.sinking,r.sinkingPaid,r.sinkingTxn)+'<div class="metric highlight"><span>Monthly + sinking</span><b>'+money(r.payableNow)+'</b></div></div><div class="details"><span class="tag">Base maintenance: '+money(r.maintenance)+'</span><span class="tag">Cars: '+r.cars+' · ₹'+Number(r.carCharge).toLocaleString('en-IN')+'</span><span class="tag">Bikes: '+r.bikes+' · Payable: '+r.payableBikes+' · ₹'+Number(r.bikeCharge).toLocaleString('en-IN')+'</span>'+(r.paymentDate?'<span class="tag payment-date">Payment recorded: '+esc(r.paymentDate)+'</span>':'')+'</div></article>').join('')}\nfunction clearFilters(){search.value='';render()}\nsearch.addEventListener('input',render);search.addEventListener('change',render);render();'''
+          s=s[:start]+block+s[end:]
+          payload='000201010211021646049010852526750415512260008525266061661000200852526860826UTIB000612292602003524423826460010A0000005240128MAB.037136061220006@AXISBANK27490010A000000524013103713606122000661000200852526865204734953033565802IN5923DIAMOND ENCLAVE FLAT OW6015NORTH 24 PARGAN610670015762120708085252686304735E'
+          qr=qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M,box_size=1,border=4); qr.add_data(payload); qr.make(fit=True)
+          mat=qr.get_matrix(); n=len(mat); cell=365/n; paths=[]
+          for y,row in enumerate(mat):
+            x=0
+            while x<n:
+              if row[x]:
+                st=x
+                while x<n and row[x]: x+=1
+                paths.append(f'M{st*cell:.2f},{y*cell:.2f}h{(x-st)*cell:.2f}v{cell:.2f}H{st*cell:.2f}Z')
+              else: x+=1
+          Path('assets').mkdir(exist_ok=True); Path('assets/payment-qr.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="365" height="368" viewBox="0 0 365 368"><rect width="365" height="368" fill="#fff"/><path d="'+' '.join(paths)+'" fill="#18243d"/></svg>',encoding='utf-8')
+          assert 'All Flat Numbers' not in s and 'All Owner Names' not in s and 'On iPhone' not in s
+          assert 'id="flat"' not in s and 'id="name"' not in s and 'assets/payment-qr.svg' in s
+          assert len(re.findall(r'"flat":"',s))==111
+          p.write_text(s,encoding='utf-8')
+          print('Validation passed: 111 residents; search-only UI; QR restored')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assets/payment-qr.svg
+          git commit -m "Simplify resident search and restore UPI QR"
+          git push
