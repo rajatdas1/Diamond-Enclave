@@ -1,0 +1,41 @@
+name: Add UPI QR to portal
+
+on:
+  push:
+    paths:
+      - 'qr.svg'
+      - '.github/workflows/add-qr-to-upi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Insert QR code into UPI section
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '<a class="upi" href="upi://pay?pa=037136061220006@AXISBANK&pn=DIAMOND%20ENCLAVE%20FLAT%20OWNER%27S%20ASSOCIATION&cu=INR">Open UPI payment app</a><div class="note"></div>'
+          new = '<a class="upi" href="upi://pay?pa=037136061220006@AXISBANK&pn=DIAMOND%20ENCLAVE%20FLAT%20OWNER%27S%20ASSOCIATION&cu=INR">Open UPI payment app</a><div class="qr-wrap"><img class="qr" src="qr.svg" alt="Diamond Enclave UPI QR code"><div class="qr-text"><h3>Scan to pay by UPI</h3><p>Use any UPI-enabled banking or payment app.</p></div></div>'
+          if '<img class="qr"' in s:
+              print('QR already present; no change needed')
+          elif old in s:
+              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+              print('QR inserted into UPI section')
+          else:
+              raise SystemExit('Expected UPI section not found')
+          PY
+          grep -q 'src="qr.svg"' index.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || (git commit -m "Restore UPI QR code in payment section" && git push)
