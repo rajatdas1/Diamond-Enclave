@@ -190,6 +190,7 @@ html, body { width:100%; max-width:100%; overflow-x:hidden; }
 </style>
 
 
+
 <style id="payment-status-public">
 .metric.payment-paid{background:#e8f5ee !important;border-color:#c5e5d6 !important}
 .metric.payment-paid b{color:#176b50 !important}
@@ -551,7 +552,7 @@ renderResidents("");
 
 <script id="payment-status-public-script">
 (function(){
-  var paymentStatus = {"D-1A": {"maintenance": "•••• 1058"}, "A-4A": {"maintenance": "•••• 2235"}, "C-5C": {"maintenance": "•••• 3083", "sinking": "•••• 6920"}, "A-5E": {"maintenance": "•••• 8201"}, "D-GB": {"maintenance": "•••• 5854", "sinking": "•••• 8732"}};
+  var paymentStatus = {"C-6D": {"maintenance": "PAID · Ref not yet verified"}, "A-2D": {"maintenance": "PAID · Ref not yet verified", "sinking": "PAID · Ref not yet verified"}, "A-2A": {"maintenance": "PAID · Ref not yet verified", "sinking": "PAID · Ref not yet verified"}, "B-6E": {"sinking": "PAID · Ref not yet verified"}, "A-3E": {"sinking": "PAID · Ref not yet verified"}, "D-1A": {"maintenance": "Txn •••• 1058"}, "A-4A": {"maintenance": "Txn •••• 2235", "sinking": "PAID · Ref not yet verified"}, "B-3A": {"maintenance": "PAID · Ref not yet verified"}, "C-5C": {"maintenance": "Txn •••• 3083", "sinking": "Txn •••• 6920"}, "B-2A": {"maintenance": "PAID · Ref not yet verified"}, "A-5E": {"maintenance": "Txn •••• 8201"}, "D-GB": {"maintenance": "Txn •••• 5854", "sinking": "Txn •••• 8732"}};
   function esc(s){
     return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
   }
@@ -568,11 +569,11 @@ renderResidents("");
       if(metrics.length<4) continue;
       if(p.maintenance && !metrics[1].querySelector('.payment-paid-status')){
         metrics[1].classList.add('payment-paid');
-        metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.maintenance)+'</span></span>');
+        metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.maintenance)+'</span></span>');
       }
       if(p.sinking && !metrics[2].querySelector('.payment-paid-status')){
         metrics[2].classList.add('payment-paid');
-        metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.sinking)+'</span></span>');
+        metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">'+esc(p.sinking)+'</span></span>');
       }
     }
   }
