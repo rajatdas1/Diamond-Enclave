@@ -1,0 +1,101 @@
+name: Update payment status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-payment-status.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply payment status to resident cards
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          import json
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+
+          # Only verified transaction references are treated as PAID.
+          # Full references are deliberately not published; only the final four digits are shown.
+          payments = {
+            'D-1A': {'maintenance': '•••• 1058'},
+            'A-4A': {'maintenance': '•••• 2235'},
+            'C-5C': {'maintenance': '•••• 3083', 'sinking': '•••• 6920'},
+            'A-5E': {'maintenance': '•••• 8201'},
+            'D-GB': {'maintenance': '•••• 5854', 'sinking': '•••• 8732'},
+          }
+
+          style = '''
+          <style id="payment-status-public">
+          .metric.payment-paid{background:#e8f5ee !important;border-color:#c5e5d6 !important}
+          .metric.payment-paid b{color:#176b50 !important}
+          .payment-paid-status{display:block;margin-top:4px;color:#176b50;font-size:9px;font-weight:900;line-height:1.25}
+          .payment-txn{display:block;font-weight:700;font-size:8px;margin-top:1px;letter-spacing:.01em}
+          </style>
+          '''
+
+          script = '''<script id="payment-status-public-script">
+          (function(){
+            var paymentStatus = __PAYMENTS_JSON__;
+            function esc(s){
+              return String(s).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});
+            }
+            function applyPaymentStatus(){
+              var cards=document.querySelectorAll('#results .resident');
+              for(var i=0;i<cards.length;i++){
+                var card=cards[i];
+                var flatEl=card.querySelector('.flat');
+                if(!flatEl) continue;
+                var flat=flatEl.textContent.trim();
+                var p=paymentStatus[flat];
+                if(!p) continue;
+                var metrics=card.querySelectorAll('.breakdown .metric');
+                if(metrics.length<4) continue;
+                if(p.maintenance && !metrics[1].querySelector('.payment-paid-status')){
+                  metrics[1].classList.add('payment-paid');
+                  metrics[1].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.maintenance)+'</span></span>');
+                }
+                if(p.sinking && !metrics[2].querySelector('.payment-paid-status')){
+                  metrics[2].classList.add('payment-paid');
+                  metrics[2].insertAdjacentHTML('beforeend','<span class="payment-paid-status">✓ PAID<span class="payment-txn">Txn: '+esc(p.sinking)+'</span></span>');
+                }
+              }
+            }
+            var results=document.getElementById('results');
+            if(results){
+              new MutationObserver(function(){applyPaymentStatus();}).observe(results,{childList:true,subtree:true});
+              applyPaymentStatus();
+            } else { document.addEventListener('DOMContentLoaded',applyPaymentStatus); }
+          })();
+          </script>'''.replace('__PAYMENTS_JSON__', json.dumps(payments, ensure_ascii=False))
+
+          html = re.sub(r'<style id="payment-status-public">.*?</style>\s*', '', html, flags=re.S)
+          html = re.sub(r'<script id="payment-status-public-script">.*?</script>\s*', '', html, flags=re.S)
+          html = html.replace('</head>', style + '\n</head>', 1)
+          html = html.replace('</body>', script + '\n</body>', 1)
+          path.write_text(html, encoding='utf-8')
+          print('Payment status layer applied.')
+          PY
+
+      - name: Commit updated page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Show verified payment status on portal"
+            git push
+          fi
